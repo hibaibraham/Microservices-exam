@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "rxdb": "^17.2.0"
+  }
+}

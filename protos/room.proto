@@ -3,23 +3,23 @@ syntax = "proto3";
 package room;
 
 service RoomService {
-  rpc GetRoom (RoomRequest) returns (RoomResponse);
-  rpc ListRooms (Empty) returns (RoomList);
+  rpc GetRoom (RoomRequest) returns (RoomResponse) {}
+  rpc ListRooms (Empty) returns (RoomListResponse) {}
 }
-
-message Empty {}
 
 message RoomRequest {
   string id = 1;
 }
 
+message Empty {}
+
 message RoomResponse {
   string id = 1;
   string title = 2;
   string description = 3;
-  double price_per_night = 4;
+  float price_per_night = 4; 
 }
 
-message RoomList {
+message RoomListResponse {
   repeated RoomResponse rooms = 1;
 }
