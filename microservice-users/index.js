@@ -1,9 +1,12 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const sqlite3 = require('sqlite3').verbose();
+const path = require('path'); // Ajoute cette ligne
 
-// 1. Charger le contrat .proto (Service gRPC le plus important)
-const packageDefinition = protoLoader.loadSync('../protos/user.proto', {});
+// Utilise path.join pour un chemin absolu sécurisé
+const PROTO_PATH = path.join(__dirname, '../protos/user.proto');
+
+const packageDefinition = protoLoader.loadSync(PROTO_PATH, {});
 const userProto = grpc.loadPackageDefinition(packageDefinition).user;
 
 // 2. Initialiser la DB SQLite3 (Conformément au cahier des charges)
