@@ -12,6 +12,8 @@
   "type": "commonjs",
   "dependencies": {
     "@grpc/grpc-js": "^1.14.3",
-    "@grpc/proto-loader": "^0.8.1"
+    "@grpc/proto-loader": "^0.8.1",
+    "express": "^5.2.1",
+    "kafkajs": "^2.2.4"
   }
 }
