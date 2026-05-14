@@ -5,9 +5,7 @@ const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 const cors = require('cors');
 
-// ==========================================
 // 1. INITIALISATION DES CLIENTS gRPC
-// ==========================================
 
 const userProtoPath = path.join(__dirname, '../protos/user.proto');
 const userProtoDef = protoLoader.loadSync(userProtoPath, {});
@@ -24,9 +22,7 @@ const roomProtoDef = protoLoader.loadSync(roomProtoPath, { keepCase: true });
 const roomProto = grpc.loadPackageDefinition(roomProtoDef).room;
 const roomClient = new roomProto.RoomService('localhost:50051', grpc.credentials.createInsecure()); // Port ajusté
 
-// ==========================================
 // 2. SCHÉMA GRAPHQL
-// ==========================================
 const typeDefs = gql`
   type User {
     id: String!
@@ -53,7 +49,7 @@ const typeDefs = gql`
     user(id: String!): User
     room(id: String!): Room
     allRooms: [Room]
-    users: [User]  # 🟢 NOUVEAU : On dit à Apollo que la liste des utilisateurs existe
+    users: [User]  
   }
 
   type Mutation {
@@ -61,9 +57,8 @@ const typeDefs = gql`
   }
 `;
 
-// ==========================================
 // 3. RÉSOLVEURS GRAPHQL
-// ==========================================
+
 const resolvers = {
   Query: {
     user: (_, { id }) => {
@@ -75,7 +70,6 @@ const resolvers = {
       });
     },
     
-    // 🟢 NOUVEAU : On apprend à Apollo comment aller chercher tous les utilisateurs via gRPC
     users: () => {
       return new Promise((resolve, reject) => {
         userClient.listUsers({}, (err, response) => {
@@ -154,9 +148,7 @@ const resolvers = {
   }
 };
 
-// ==========================================
 // 4. LANCEMENT DU SERVEUR
-// ==========================================
 async function startServer() {
   const app = express();
   
@@ -194,7 +186,6 @@ async function startServer() {
     });
   });
 
-  // 🟢 NOUVEAU : Route REST pour ajouter facilement un utilisateur depuis Postman si besoin
   app.post('/users', (req, res) => {
     const { name, email } = req.body;
     userClient.CreateUser({ name, email }, (err, response) => {
@@ -204,7 +195,7 @@ async function startServer() {
   });
 
   app.listen(3000, () => {
-    console.log('🚀 API Gateway en ligne (Apollo + REST) !');
+    console.log(' API Gateway en ligne (Apollo + REST) !');
   });
 }
 
