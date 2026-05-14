@@ -1,17 +1,15 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
-const { Kafka } = require('kafkajs'); // 1. Ajout de Kafka
+const { Kafka } = require('kafkajs'); 
 
-// Les imports modernes compatibles Node 24 !
 const { createRxDatabase } = require('rxdb');
 const { getRxStorageMemory } = require('rxdb/plugins/storage-memory');
 
 async function start() {
     try {
-        // ==========================================
+        
         // 1. Initialisation NoSQL RxDB
-        // ==========================================
         const db = await createRxDatabase({
             name: 'roomsdb',
             storage: getRxStorageMemory() // Base NoSQL en mémoire
@@ -28,25 +26,33 @@ async function start() {
                         title: { type: 'string' },
                         description: { type: 'string' },
                         price_per_night: { type: 'number' },
-                        isAvailable: { type: 'boolean' } // NOUVEAU : Statut de disponibilité
+                        is_available: { type: 'boolean' } 
                     },
                     required: ['id', 'title', 'price_per_night']
                 }
             }
         });
 
-        // Donnée de test initiale (La chambre 101 est disponible)
+        // Données de test initiales propres
         await db.rooms.insert({ 
-            id: '101', 
+            id: '201', 
             title: 'Suite Royale', 
             description: 'Vue sur mer', 
             price_per_night: 150.0,
-            isAvailable: true
+            is_available: true 
         });
 
-        // ==========================================
+        await db.rooms.insert({
+            id: "202",
+            title: "Chambre Deluxe",
+            description: "Lit King Size et Jacuzzi",
+            price_per_night: 95.0,
+            is_available: true 
+        });
+
+        console.log('🏁 [RXDB] Chambres 201 et 202 initialisées à disponible (true).');
+
         // 2. Configuration du Consommateur KAFKA
-        // ==========================================
         const kafka = new Kafka({
             clientId: 'room-service',
             brokers: ['localhost:9092']
@@ -54,34 +60,28 @@ async function start() {
         const consumer = kafka.consumer({ groupId: 'room-group' });
 
         await consumer.connect();
-        console.log('✅ MS-Rooms : Consommateur Kafka connecté');
+        console.log(' MS-Rooms : Consommateur Kafka connecté');
         
-        // On écoute les réservations
         await consumer.subscribe({ topic: 'hotel-bookings-topic', fromBeginning: true });
 
         await consumer.run({
             eachMessage: async ({ message }) => {
                 const eventData = JSON.parse(message.value.toString());
                 
-                // Si une réservation est créée, on rend la chambre indisponible !
                 if (eventData.event === 'BOOKING_CREATED') {
-                    const roomId = eventData.roomId;
+                    const roomId = eventData.roomId || eventData.room_id; 
                     
-                    // Recherche de la chambre dans RxDB (NoSQL)
                     const room = await db.rooms.findOne(roomId).exec();
-                    if (room && room.isAvailable) {
-                        // Mise à jour NoSQL : incrementalPatch permet de modifier juste un champ
-                        await room.incrementalPatch({ isAvailable: false });
-                        console.log(`\n🏨 [KAFKA] Réservation confirmée pour la chambre ${roomId} !`);
-                        console.log(`   -> Mise à jour RxDB : La chambre n'est plus disponible (isAvailable: false).`);
+                    if (room && room.is_available) {
+                        await room.incrementalPatch({ is_available: false });
+                        console.log(`\n [KAFKA] Réservation confirmée pour la chambre ${roomId} !`);
+                        console.log(`   -> Mise à jour RxDB : La chambre n'est plus disponible (is_available: false).`);
                     }
                 }
             }
         });
 
-        // ==========================================
         // 3. Configuration gRPC
-        // ==========================================
         const PROTO_PATH = path.join(__dirname, '../protos/room.proto');
         const packageDefinition = protoLoader.loadSync(PROTO_PATH, { keepCase: true });
         const roomProto = grpc.loadPackageDefinition(packageDefinition).room;
@@ -90,8 +90,11 @@ async function start() {
         server.addService(roomProto.RoomService.service, {
             getRoom: async (call, callback) => {
                 const room = await db.rooms.findOne(call.request.id).exec();
-                if (room) callback(null, room.toJSON());
-                else callback({ code: grpc.status.NOT_FOUND, details: "Chambre non trouvée" });
+                if (room) {
+                    callback(null, room.toJSON());
+                } else {
+                    callback({ code: grpc.status.NOT_FOUND, details: "Chambre non trouvée" });
+                }
             },
             listRooms: async (call, callback) => {
                 const allRooms = await db.rooms.find().exec();
@@ -99,10 +102,9 @@ async function start() {
             }
         });
 
-        // ATTENTION : Changement de port vers 50053 pour ne pas bloquer Bookings (50052)
-        server.bindAsync('0.0.0.0:50053', grpc.ServerCredentials.createInsecure(), (err, port) => {
+        server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), (err, port) => {
             if (err) throw err;
-            console.log(`🚀 MS-Rooms (RxDB NoSQL + Kafka) démarré sur le port ${port}`);
+            console.log(` MS-Rooms (RxDB NoSQL + Kafka) démarré sur le port ${port}`);
         });
 
     } catch (err) {

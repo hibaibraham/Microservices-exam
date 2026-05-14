@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StaySmart - Test Frontend</title>
+    <style>
+        /* Un design minimaliste et propre */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 { font-size: 24px; text-align: center; color: #2c3e50; margin-bottom: 20px;}
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input { 
+            width: 100%; padding: 10px; border: 1px solid #ccc; 
+            border-radius: 6px; box-sizing: border-box; font-size: 14px;
+        }
+        button {
+            width: 100%; padding: 12px; background-color: #3498db; 
+            color: white; border: none; border-radius: 6px;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        button:hover { background-color: #2980b9; }
+        #message { margin-top: 15px; text-align: center; font-weight: bold; padding: 10px; border-radius: 6px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🏨 Réserver une chambre</h1>
+        
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="userId">ID Utilisateur</label>
+                <input type="text" id="userId" value="user_123" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="roomId">ID Chambre</label>
+                <input type="text" id="roomId" value="101" required>
+            </div>
+
+            <div class="form-group">
+                <label for="startDate">Date d'arrivée (De)</label>
+                <input type="date" id="startDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="endDate">Date de départ (À)</label>
+                <input type="date" id="endDate" required>
+            </div>
+
+            <button type="submit">Confirmer la réservation</button>
+        </form>
+
+        <div id="message" style="display: none;"></div>
+    </div>
+
+    <script>
+        // La logique JavaScript pour parler à ton API Gateway
+        document.getElementById('bookingForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Empêche la page de se recharger
+
+            const messageDiv = document.getElementById('message');
+            messageDiv.style.display = 'block';
+            messageDiv.className = '';
+            messageDiv.innerText = '⏳ Réservation en cours...';
+
+            // Récupération des données du formulaire
+            // Dans le JavaScript
+            const bookingData = {
+                userId: document.getElementById('userId').value,
+                roomId: document.getElementById('roomId').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Si HTTP 200 OK
+                    messageDiv.className = 'success';
+                    messageDiv.innerText = `✅ Succès ! Réservation n°${result.id} enregistrée.`;
+                } else {
+                    // Si HTTP 400 ou 404 (Erreurs de notre Gateway)
+                    messageDiv.className = 'error';
+                    // Affiche exactement le message renvoyé par le serveur
+                    messageDiv.innerText = '❌ Échec : ' + result.message; 
+                }
+            } catch (error) {
+                messageDiv.className = 'error';
+                messageDiv.innerText = '❌ Erreur critique de connexion au serveur.';
+            }
+        });
+    </script>
+</body>
+</html>

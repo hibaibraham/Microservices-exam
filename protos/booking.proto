@@ -8,8 +8,8 @@ service BookingService {
 }
 
 message BookingRequest {
-  string user_id = 1;
-  string room_id = 2;
+  string userId = 1;
+  string roomId = 2;
   string start_date = 3;
   string end_date = 4;
 }
@@ -20,7 +20,7 @@ message BookingResponse {
 }
 
 message UserBookingsRequest {
-  string user_id = 1;
+  string userId = 1;
 }
 
 message BookingList {
