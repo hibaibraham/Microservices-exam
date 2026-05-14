@@ -14,11 +14,17 @@ const userProtoDef = protoLoader.loadSync(userProtoPath, {});
 const userProto = grpc.loadPackageDefinition(userProtoDef).user;
 const userClient = new userProto.UserService('localhost:50051', grpc.credentials.createInsecure());
 
-// Client pour MS-Rooms (Port 50052)
+// Client pour MS-Bookings (Port 50052)
+const bookingProtoPath = path.join(__dirname, '../protos/booking.proto');
+const bookingProtoDef = protoLoader.loadSync(bookingProtoPath, { keepCase: true });
+const bookingProto = grpc.loadPackageDefinition(bookingProtoDef).booking;
+const bookingClient = new bookingProto.BookingService('localhost:50052', grpc.credentials.createInsecure());
+
+// Client pour MS-Rooms (Port 50053)
 const roomProtoPath = path.join(__dirname, '../protos/room.proto');
 const roomProtoDef = protoLoader.loadSync(roomProtoPath, { keepCase: true });
 const roomProto = grpc.loadPackageDefinition(roomProtoDef).room;
-const roomClient = new roomProto.RoomService('localhost:50052', grpc.credentials.createInsecure());
+const roomClient = new roomProto.RoomService('localhost:50053', grpc.credentials.createInsecure());
 
 
 // ==========================================
@@ -29,6 +35,7 @@ const typeDefs = gql`
     id: String!
     name: String!
     email: String!
+    loyaltyPoints: Int
   }
 
   type Room {
@@ -36,6 +43,13 @@ const typeDefs = gql`
     title: String!
     description: String!
     price_per_night: Float!
+    isAvailable: Boolean
+  }
+
+  type BookingResponse {
+    success: Boolean!
+    message: String!
+    bookingId: String
   }
 
   type Query {
@@ -43,15 +57,17 @@ const typeDefs = gql`
     room(id: String!): Room
     allRooms: [Room]
   }
+
+  type Mutation {
+    createBooking(userId: String!, roomId: String!, date: String!): BookingResponse
+  }
 `;
 
-
 // ==========================================
-// 3. RÉSOLVEURS GRAPHQL (Comment récupérer la donnée)
+// 3. RÉSOLVEURS GRAPHQL
 // ==========================================
 const resolvers = {
   Query: {
-    // Appel gRPC vers MS-Users
     user: (_, { id }) => {
       return new Promise((resolve, reject) => {
         userClient.getUser({ id }, (err, response) => {
@@ -60,7 +76,6 @@ const resolvers = {
         });
       });
     },
-    // Appel gRPC vers MS-Rooms (Récupérer une chambre)
     room: (_, { id }) => {
       return new Promise((resolve, reject) => {
         roomClient.getRoom({ id }, (err, response) => {
@@ -69,7 +84,6 @@ const resolvers = {
         });
       });
     },
-    // Appel gRPC vers MS-Rooms (Lister toutes les chambres)
     allRooms: () => {
       return new Promise((resolve, reject) => {
         roomClient.listRooms({}, (err, response) => {
@@ -78,21 +92,47 @@ const resolvers = {
         });
       });
     }
+  },
+  Mutation: {
+    // Appel gRPC vers MS-Bookings pour créer une réservation
+    createBooking: (_, { userId, roomId, date }) => {
+      return new Promise((resolve, reject) => {
+        bookingClient.createBooking({ userId, roomId, date }, (err, response) => {
+          if (err) {
+            reject(err);
+          } else {
+            // Traduction de la réponse gRPC pour GraphQL
+            resolve({
+              success: true,
+              message: "Réservation créée avec succès !",
+              bookingId: response.id || response.bookingId || "Inconnu"
+            });
+          }
+        });
+      });
+    }
   }
 };
 
-
 // ==========================================
-// 4. LANCEMENT DU SERVEUR
+// 4. LANCEMENT DU SERVEUR (REST & GRAPHQL)
 // ==========================================
 async function startServer() {
   const app = express();
+
+  // 1. Initialiser GraphQL d'abord (Résout l'erreur "stream is not readable")
   const server = new ApolloServer({ typeDefs, resolvers });
-  
   await server.start();
   server.applyMiddleware({ app });
 
-  // Route REST de test (Optionnel)
+  // 2. Ensuite, activer la lecture du JSON pour les routes REST
+  app.use(express.json());
+
+  // ------------------------------------------------
+  // ROUTES REST (Conforme à l'architecture demandée)
+  // ------------------------------------------------
+  
+  // GET : Lister les chambres
   app.get('/rooms', (req, res) => {
     roomClient.listRooms({}, (err, response) => {
       if (err) res.status(500).send(err);
@@ -100,8 +140,19 @@ async function startServer() {
     });
   });
 
+  // POST : Créer une réservation via REST
+  app.post('/bookings', (req, res) => {
+    const { userId, roomId, date } = req.body;
+    bookingClient.createBooking({ userId, roomId, date }, (err, response) => {
+      if (err) res.status(500).send(err);
+      else res.json(response);
+    });
+  });
+
   app.listen(3000, () => {
-    console.log('🚀 API Gateway prête sur http://localhost:3000/graphql');
+    console.log('🚀 API Gateway prête !');
+    console.log('➡️  GraphQL: http://localhost:3000/graphql');
+    console.log('➡️  REST:    http://localhost:3000/rooms (GET) | http://localhost:3000/bookings (POST)');
   });
 }
 
