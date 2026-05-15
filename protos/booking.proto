@@ -5,6 +5,7 @@ package booking;
 service BookingService {
   rpc CreateBooking (BookingRequest) returns (BookingResponse);
   rpc GetUserBookings (UserBookingsRequest) returns (BookingList);
+  rpc CheckAvailability (AvailabilityRequest) returns (AvailabilityResponse);
 }
 
 message BookingRequest {
@@ -25,4 +26,15 @@ message UserBookingsRequest {
 
 message BookingList {
   repeated BookingResponse bookings = 1;
+}
+
+message AvailabilityRequest {
+  string roomId = 1;
+  string start_date = 2;
+  string end_date = 3;
+}
+
+message AvailabilityResponse {
+  bool available = 1;
+  string message = 2;
 }

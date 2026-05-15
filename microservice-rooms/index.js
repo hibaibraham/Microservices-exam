@@ -52,34 +52,10 @@ async function start() {
 
         console.log('🏁 [RXDB] Chambres 201 et 202 initialisées à disponible (true).');
 
-        // 2. Configuration du Consommateur KAFKA
-        const kafka = new Kafka({
-            clientId: 'room-service',
-            brokers: ['localhost:9092']
-        });
-        const consumer = kafka.consumer({ groupId: 'room-group' });
-
-        await consumer.connect();
-        console.log(' MS-Rooms : Consommateur Kafka connecté');
         
-        await consumer.subscribe({ topic: 'hotel-bookings-topic', fromBeginning: true });
-
-        await consumer.run({
-            eachMessage: async ({ message }) => {
-                const eventData = JSON.parse(message.value.toString());
-                
-                if (eventData.event === 'BOOKING_CREATED') {
-                    const roomId = eventData.roomId || eventData.room_id; 
-                    
-                    const room = await db.rooms.findOne(roomId).exec();
-                    if (room && room.is_available) {
-                        await room.incrementalPatch({ is_available: false });
-                        console.log(`\n [KAFKA] Réservation confirmée pour la chambre ${roomId} !`);
-                        console.log(`   -> Mise à jour RxDB : La chambre n'est plus disponible (is_available: false).`);
-                    }
-                }
-            }
-        });
+        
+        console.log(' MS-Rooms : Kafka désactivé - Les chambres restent toujours disponibles');
+        console.log('   La disponibilité est vérifiée en temps réel via les réservations');
 
         // 3. Configuration gRPC
         const PROTO_PATH = path.join(__dirname, '../protos/room.proto');

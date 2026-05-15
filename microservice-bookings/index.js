@@ -36,29 +36,43 @@ const bookingProto = grpc.loadPackageDefinition(packageDefinition).booking;
 
 // 4. LOGIQUE DU SERVICE (Créer une réservation)
 const createBooking = async (call, callback) => {
-  const { userId, roomId, startDate, endDate } = call.request;
-
-  // 1️ÉTAPE DE VÉRIFICATION : Est-ce que cette chambre est déjà réservée dans SQLite ?
-  const checkSql = `SELECT * FROM bookings WHERE roomId = ?`;
+  const { userId, roomId, start_date, end_date } = call.request;
   
-  db.get(checkSql, [roomId], async (err, row) => {
+  // Utiliser les noms avec underscore qui viennent du proto
+  const startDate = start_date;
+  const endDate = end_date;
+
+  console.log(`[DEBUG] Réservation demandée : userId=${userId}, roomId=${roomId}, startDate=${startDate}, endDate=${endDate}`);
+
+  // 1️⃣ ÉTAPE DE VÉRIFICATION : Vérifier les chevauchements de dates
+  const checkSql = `
+    SELECT * FROM bookings 
+    WHERE roomId = ? 
+    AND (
+      (startDate <= ? AND endDate >= ?) OR
+      (startDate <= ? AND endDate >= ?) OR
+      (startDate >= ? AND endDate <= ?)
+    )
+  `;
+  
+  db.get(checkSql, [roomId, startDate, startDate, endDate, endDate, startDate, endDate], async (err, row) => {
     if (err) {
       console.error('Erreur de vérification DB:', err);
       return callback({ code: grpc.status.INTERNAL, message: 'Erreur interne de la base' });
     }
 
-    // Si on trouve une ligne, ça veut dire que la chambre est DÉJÀ réservée 
+    // Si on trouve une ligne, ça veut dire qu'il y a un chevauchement de dates
     if (row) {
-      console.log(`[DB]  Refusé : La chambre ${roomId} est déjà occupée.`);
+      console.log(`[DB] ❌ Refusé : La chambre ${roomId} est déjà réservée pour cette période.`);
+      console.log(`   Réservation existante : du ${row.startDate} au ${row.endDate}`);
       
-      // On renvoie un statut "FAILED" ou on déclenche une erreur gRPC
       return callback(null, { 
         id: "0",
-        status: 'FAILED' // le HTML va capter ça et afficher le bandeau ROUGE !
+        status: 'FAILED'
       });
     }
 
-    // 2️) SI LA CHAMBRE EST LIBRE : On fait l'insertion normale
+    // 2️⃣ SI LA CHAMBRE EST LIBRE : On fait l'insertion normale
     const insertSql = `INSERT INTO bookings (userId, roomId, startDate, endDate) VALUES (?, ?, ?, ?)`;
     db.run(insertSql, [userId, roomId, startDate, endDate], async function (err) {
       if (err) {
@@ -102,6 +116,46 @@ const createBooking = async (call, callback) => {
     });
   });
 };
+
+// Nouvelle fonction pour vérifier la disponibilité sans créer de réservation
+const checkAvailability = (call, callback) => {
+  const { roomId, start_date, end_date } = call.request;
+
+  const checkSql = `
+    SELECT * FROM bookings 
+    WHERE roomId = ? 
+    AND (
+      (startDate <= ? AND endDate >= ?) OR
+      (startDate <= ? AND endDate >= ?) OR
+      (startDate >= ? AND endDate <= ?)
+    )
+  `;
+  
+  db.get(checkSql, [roomId, start_date, start_date, end_date, end_date, start_date, end_date], (err, row) => {
+    if (err) {
+      console.error('Erreur de vérification DB:', err);
+      return callback(null, { 
+        available: false,
+        message: 'Erreur interne'
+      });
+    }
+
+    // Si on trouve une ligne, ça veut dire qu'il y a un chevauchement
+    if (row) {
+      return callback(null, { 
+        available: false,
+        message: `Chambre déjà réservée du ${row.startDate} au ${row.endDate}`
+      });
+    }
+
+    // Chambre disponible
+    callback(null, { 
+      available: true,
+      message: 'Chambre disponible pour ces dates'
+    });
+  });
+};
+
 // 5. DÉMARRAGE DU SERVEUR gRPC
 async function startServer() {
   try {
@@ -111,7 +165,10 @@ async function startServer() {
 
     // On lance le serveur gRPC
     const server = new grpc.Server();
-    server.addService(bookingProto.BookingService.service, { CreateBooking: createBooking });
+    server.addService(bookingProto.BookingService.service, { 
+      CreateBooking: createBooking,
+      CheckAvailability: checkAvailability
+    });
     
     server.bindAsync('127.0.0.1:50052', grpc.ServerCredentials.createInsecure(), (err, port) => {
       if (err) {

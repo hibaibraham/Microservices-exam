@@ -518,11 +518,11 @@ Le serveur GraphQL communique avec les microservices via gRPC :
 
 ## 8. Avantages de GraphQL
 
-- ✅ **Requêtes flexibles** : Le client demande exactement les données dont il a besoin
-- ✅ **Une seule requête** : Récupérer des données de plusieurs sources en une fois
-- ✅ **Typage fort** : Validation automatique des requêtes
-- ✅ **Documentation intégrée** : GraphQL Playground génère automatiquement la documentation
-- ✅ **Introspection** : Le schéma peut être interrogé pour découvrir les types disponibles
+-  **Requêtes flexibles** : Le client demande exactement les données dont il a besoin
+-  **Une seule requête** : Récupérer des données de plusieurs sources en une fois
+-  **Typage fort** : Validation automatique des requêtes
+-  **Documentation intégrée** : GraphQL Playground génère automatiquement la documentation
+-  **Introspection** : Le schéma peut être interrogé pour découvrir les types disponibles
 
 ---
 
@@ -540,10 +540,10 @@ Le serveur GraphQL communique avec les microservices via gRPC :
 
 ## 10. Limitations actuelles
 
-- ⚠️ Pas de pagination pour les listes
-- ⚠️ Pas de filtrage ou de tri
-- ⚠️ Pas de subscriptions (temps réel)
-- ⚠️ Pas d'authentification
+-  Pas de pagination pour les listes
+-  Pas de filtrage ou de tri
+-  Pas de subscriptions (temps réel)
+-  Pas d'authentification
 
 ---
 

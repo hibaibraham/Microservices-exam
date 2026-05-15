@@ -16,9 +16,9 @@ db.serialize(() => {
   // Ajout de la colonne loyaltyPoints
   db.run("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT, email TEXT, loyaltyPoints INTEGER DEFAULT 0)");
   
-  // On insère tes utilisateurs de test 
-  db.run("INSERT OR IGNORE INTO users (id, name, email, loyaltyPoints) VALUES ('1', 'Hiba Ibrahim', 'hiba@example.com', 0)");
-  db.run("INSERT OR IGNORE INTO users (id, name, email, loyaltyPoints) VALUES ('user_123', 'Client Test Kafka', 'test@example.com', 0)");
+  // On insère/met à jour les utilisateurs de test avec INSERT OR REPLACE
+  db.run("INSERT OR REPLACE INTO users (id, name, email, loyaltyPoints) VALUES ('1', 'Hiba Ibrahim', 'hiba@example.com', 0)");
+  db.run("INSERT OR REPLACE INTO users (id, name, email, loyaltyPoints) VALUES ('user_123', 'Client Test Kafka', 'test@example.com', 0)");
 });
 
 // 3. Implémentation de la logique métier

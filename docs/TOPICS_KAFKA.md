@@ -166,9 +166,9 @@ Si un consumer ne peut pas se connecter à Kafka :
 ```javascript
 try {
   await consumer.connect();
-  console.log('✅ Consommateur Kafka connecté');
+  console.log(' Consommateur Kafka connecté');
 } catch (error) {
-  console.error('❌ Erreur de connexion Kafka:', error);
+  console.error(' Erreur de connexion Kafka:', error);
 }
 ```
 
@@ -183,7 +183,7 @@ await consumer.run({
       const eventData = JSON.parse(message.value.toString());
       // Traitement...
     } catch (error) {
-      console.error('❌ Erreur de traitement:', error);
+      console.error(' Erreur de traitement:', error);
       // Le message n'est pas re-traité (at-most-once delivery)
     }
   }
@@ -328,7 +328,7 @@ docker exec -it kafka kafka-topics --create \
 
 ### Configuration actuelle
 
-⚠️ **Aucune sécurité** : Kafka est accessible sans authentification
+ **Aucune sécurité** : Kafka est accessible sans authentification
 
 ### Recommandations pour la production
 

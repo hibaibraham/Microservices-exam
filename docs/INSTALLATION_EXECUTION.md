@@ -240,9 +240,9 @@ node index.js
 
 **Sortie attendue** :
 ```
-✅ MS-Rooms : Consommateur Kafka connecté
-🏁 [RXDB] Chambres 201 et 202 initialisées à disponible (true).
-🚀 MS-Rooms (RxDB NoSQL + Kafka) démarré sur le port 50051
+ MS-Rooms : Consommateur Kafka connecté
+ [RXDB] Chambres 201 et 202 initialisées à disponible (true).
+ MS-Rooms (RxDB NoSQL + Kafka) démarré sur le port 50051
 ```
 
 #### Terminal 2 : Microservice Bookings
@@ -254,9 +254,9 @@ node index.js
 
 **Sortie attendue** :
 ```
-✅ Connecté à la base de données SQLite (bookings.db)
-✅ Connecté à Kafka avec succès
-🚀 Microservice Bookings (gRPC) démarré sur le port 50052
+ Connecté à la base de données SQLite (bookings.db)
+ Connecté à Kafka avec succès
+ Microservice Bookings (gRPC) démarré sur le port 50052
 ```
 
 #### Terminal 3 : Microservice Users
@@ -268,8 +268,8 @@ node index.js
 
 **Sortie attendue** :
 ```
-✅ Consommateur Kafka connecté
-🚀 MS-Users (SQLite3 + Kafka) démarré sur le port 50053
+ Consommateur Kafka connecté
+ MS-Users (SQLite3 + Kafka) démarré sur le port 50053
 ```
 
 #### Terminal 4 : API Gateway
@@ -281,7 +281,7 @@ node index.js
 
 **Sortie attendue** :
 ```
-🚀 API Gateway en ligne (Apollo + REST) !
+ API Gateway en ligne (Apollo + REST) !
 ```
 
 ### Étape 3 : Vérifier que tous les services sont démarrés
@@ -398,9 +398,9 @@ curl -X POST http://localhost:3000/bookings \
 
 **Vérifier les logs** :
 
-- **Terminal Bookings** : `[DB] 💾 Réservation 1 sauvegardée dans SQLite`
-- **Terminal Rooms** : `🏨 [KAFKA] Réservation confirmée pour la chambre 201 !`
-- **Terminal Users** : `🎉 [KAFKA] Réservation détectée pour user_123 ! +10 points de fidélité ajoutés.`
+- **Terminal Bookings** : `[DB]  Réservation 1 sauvegardée dans SQLite`
+- **Terminal Rooms** : ` [KAFKA] Réservation confirmée pour la chambre 201 !`
+- **Terminal Users** : ` [KAFKA] Réservation détectée pour user_123 ! +10 points de fidélité ajoutés.`
 
 ### Test 4 : Frontend HTML
 

@@ -316,14 +316,14 @@ Client    API-GW    MS-Rooms    MS-Bookings    Kafka    MS-Users
 
 ## Conformité avec l'architecture attendue
 
-✅ **Client** : Communique avec API Gateway via REST/GraphQL  
-✅ **API Gateway** : Point d'entrée unique exposant REST et GraphQL  
-✅ **Microservices** : Communication via gRPC (HTTP/2 + Protobuf)  
-✅ **Microservice 1 (Rooms)** : Utilise RxDB (NoSQL)  
-✅ **Microservice 2 (Bookings)** : Utilise SQLite3 (SQL)  
-✅ **Microservice 3 (Users)** : Utilise SQLite3 (SQL)  
-✅ **Kafka** : Communication asynchrone entre microservices  
-✅ **Fichiers .proto** : Définition des contrats gRPC  
+ **Client** : Communique avec API Gateway via REST/GraphQL  
+ **API Gateway** : Point d'entrée unique exposant REST et GraphQL  
+ **Microservices** : Communication via gRPC (HTTP/2 + Protobuf)  
+ **Microservice 1 (Rooms)** : Utilise RxDB (NoSQL)  
+ **Microservice 2 (Bookings)** : Utilise SQLite3 (SQL)  
+ **Microservice 3 (Users)** : Utilise SQLite3 (SQL)  
+ **Kafka** : Communication asynchrone entre microservices  
+ **Fichiers .proto** : Définition des contrats gRPC  
 
 ---
 

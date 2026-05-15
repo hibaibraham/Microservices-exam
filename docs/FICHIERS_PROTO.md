@@ -489,10 +489,10 @@ service UserService {
 
 ### Rétrocompatibilité
 
-- ✅ Ajouter de nouveaux champs (avec de nouveaux numéros)
-- ✅ Ajouter de nouvelles méthodes RPC
-- ❌ Ne jamais supprimer ou renommer des champs existants
-- ❌ Ne jamais changer le type d'un champ
+-  Ajouter de nouveaux champs (avec de nouveaux numéros)
+-  Ajouter de nouvelles méthodes RPC
+-  Ne jamais supprimer ou renommer des champs existants
+-  Ne jamais changer le type d'un champ
 
 ### Documentation
 
@@ -547,8 +547,8 @@ message UserResponse {
   string id = 1;
   string name = 2;
   string email = 3;
-  int32 loyaltyPoints = 4;  // ✅ Nouveau champ ajouté
-  string phone = 5;          // ✅ Nouveau champ ajouté
+  int32 loyaltyPoints = 4; 
+  string phone = 5;          
 }
 ```
 
@@ -558,8 +558,7 @@ message UserResponse {
 service BookingService {
   rpc CreateBooking (BookingRequest) returns (BookingResponse);
   rpc GetUserBookings (UserBookingsRequest) returns (BookingList);
-  rpc CancelBooking (CancelRequest) returns (CancelResponse);  // ✅ Nouvelle méthode
-}
+  rpc CancelBooking (CancelRequest) returns (CancelResponse); 
 ```
 
 ### Dépréciation
