@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StaySmart - Réservation d'Hôtel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card h2 {
+            font-size: 22px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        /* Section Chambres */
+        .rooms-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .room-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .room-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .room-card.selected {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+        
+        .room-card.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f5f5f5;
+        }
+        
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .room-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .room-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .room-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .room-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .room-status.available {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .room-status.unavailable {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Section Réservation */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        button:hover {
+            background-color: #5568d3;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .user-info {
+            background-color: #f0f4ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .user-info h3 {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .loyalty-points {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        #message {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .refresh-btn {
+            background-color: #28a745;
+            margin-top: 10px;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏨 StaySmart</h1>
+        <p>Système de Réservation d'Hôtel - Architecture Microservices</p>
+    </div>
+
+    <div class="main-container">
+        <!-- Section Chambres Disponibles -->
+        <div class="card">
+            <h2>📋 Chambres Disponibles</h2>
+            <div id="roomsList" class="rooms-list">
+                <div class="loading">⏳ Chargement des chambres...</div>
+            </div>
+            <button class="refresh-btn" onclick="loadRooms()">🔄 Actualiser</button>
+        </div>
+
+        <!-- Section Réservation -->
+        <div class="card">
+            <h2>✨ Faire une Réservation</h2>
+            
+            <div class="user-info" id="userInfo" style="display: none;">
+                <h3>👤 Informations Utilisateur</h3>
+                <div id="userName"></div>
+                <div>Points de fidélité: <span class="loyalty-points" id="loyaltyPoints">0</span> </div>
+            </div>
+            
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label for="userId">ID Utilisateur</label>
+                    <input type="text" id="userId" value="user_123" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="roomId">Chambre Sélectionnée</label>
+                    <input type="text" id="roomId" value="" placeholder="Cliquez sur une chambre" readonly required>
+                </div>
+
+                <div class="form-group">
+                    <label for="startDate">Date d'arrivée</label>
+                    <input type="date" id="startDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="endDate">Date de départ</label>
+                    <input type="date" id="endDate" required>
+                </div>
+
+                <button type="submit" id="submitBtn">Confirmer la Réservation</button>
+            </form>
+
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        let rooms = [];
+        let selectedRoomId = null;
+
+        // Charger les chambres au démarrage
+        window.addEventListener('load', () => {
+            loadRooms();
+            loadUserInfo();
+            setMinDate();
+            
+            // Vérifier la disponibilité quand les dates changent
+            document.getElementById('startDate').addEventListener('change', checkAvailabilityOnDateChange);
+            document.getElementById('endDate').addEventListener('change', checkAvailabilityOnDateChange);
+        });
+
+        // Définir la date minimale à aujourd'hui
+        function setMinDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').min = today;
+            document.getElementById('endDate').min = today;
+        }
+
+        // Charger les chambres depuis l'API
+        async function loadRooms() {
+            const roomsList = document.getElementById('roomsList');
+            roomsList.innerHTML = '<div class="loading">⏳ Chargement des chambres...</div>';
+
+            try {
+                const response = await fetch('http://localhost:3000/rooms');
+                const data = await response.json();
+                rooms = data.rooms || [];
+                displayRooms();
+            } catch (error) {
+                console.error('Erreur chargement chambres:', error);
+                roomsList.innerHTML = '<div class="error"> Erreur de chargement des chambres</div>';
+            }
+        }
+
+        // Vérifier la disponibilité quand les dates changent
+        async function checkAvailabilityOnDateChange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                // Pas de dates complètes, afficher toutes les chambres comme disponibles
+                displayRooms();
+                return;
+            }
+
+            // Afficher un indicateur de chargement
+            const roomsList = document.getElementById('roomsList');
+            roomsList.innerHTML = '<div class="loading">⏳ Vérification de la disponibilité...</div>';
+
+            // Vérifier chaque chambre
+            for (const room of rooms) {
+                try {
+                    const response = await fetch('http://localhost:3000/check-availability', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            roomId: room.id,
+                            startDate: startDate,
+                            endDate: endDate
+                        })
+                    });
+                    const result = await response.json();
+                    room.availableForDates = result.available;
+                } catch (error) {
+                    console.error(`Erreur vérification chambre ${room.id}:`, error);
+                    room.availableForDates = true; // Par défaut disponible en cas d'erreur
+                }
+            }
+
+            displayRooms();
+        }
+
+        // Afficher les chambres
+        function displayRooms() {
+            const roomsList = document.getElementById('roomsList');
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const hasDates = startDate && endDate;
+            
+            if (rooms.length === 0) {
+                roomsList.innerHTML = '<div>Aucune chambre disponible</div>';
+                return;
+            }
+
+            const roomsHTML = rooms.map(room => {
+                const isAvailable = hasDates ? (room.availableForDates !== false) : true;
+                const statusClass = isAvailable ? 'available' : 'unavailable';
+                const statusText = hasDates 
+                    ? (isAvailable ? '✅ Disponible pour ces dates' : ' Indisponible pour ces dates')
+                    : '✅ Disponible (sélectionnez des dates)';
+                const cardClass = isAvailable ? '' : 'unavailable';
+                const selectedClass = selectedRoomId === room.id ? 'selected' : '';
+                
+                return '<div class="room-card ' + cardClass + ' ' + selectedClass + '" onclick="selectRoom(\'' + room.id + '\', ' + isAvailable + ')">' +
+                    '<div class="room-header">' +
+                        '<div class="room-title">' + room.title + '</div>' +
+                        '<div class="room-price">' + room.price_per_night + '€/nuit</div>' +
+                    '</div>' +
+                    '<div class="room-description">' + room.description + '</div>' +
+                    '<span class="room-status ' + statusClass + '">' + statusText + '</span>' +
+                '</div>';
+            }).join('');
+            
+            roomsList.innerHTML = roomsHTML;
+        }
+
+        // Sélectionner une chambre
+        function selectRoom(roomId, isAvailable) {
+            if (!isAvailable) {
+                showMessage(" Cette chambre n'est pas disponible pour les dates sélectionnées", "error");
+                return;
+            }
+            selectedRoomId = roomId;
+            document.getElementById('roomId').value = roomId;
+            displayRooms();
+        }
+
+        // Charger les informations utilisateur
+        async function loadUserInfo() {
+            const userId = document.getElementById('userId').value;
+            
+            try {
+                const response = await fetch('http://localhost:3000/graphql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: `query { user(id: "${userId}") { name email loyaltyPoints } }`
+                    })
+                });
+
+                const result = await response.json();
+                if (result.data && result.data.user) {
+                    const user = result.data.user;
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('userName').textContent = `${user.name} (${user.email})`;
+                    document.getElementById('loyaltyPoints').textContent = user.loyaltyPoints || 0;
+                }
+            } catch (error) {
+                console.error('Erreur chargement utilisateur:', error);
+            }
+        }
+
+        // Soumettre la réservation
+        document.getElementById('bookingForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Réservation en cours...';
+
+            const bookingData = {
+                userId: document.getElementById('userId').value,
+                roomId: document.getElementById('roomId').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage(`✅ Succès ! Réservation n°${result.id} confirmée. Vous avez gagné 10 points de fidélité ! Mise à jour en cours...`, 'success');
+                    
+                    // Recharger les chambres et les infos utilisateur après 3 secondes (temps pour Kafka)
+                    setTimeout(() => {
+                        showMessage('🔄 Actualisation des données...', 'success');
+                        loadRooms();
+                        loadUserInfo();
+                        document.getElementById('bookingForm').reset();
+                        selectedRoomId = null;
+                    }, 3000);
+                } else {
+                    showMessage('❌ Échec : ' + result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erreur de connexion au serveur', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Confirmer la Réservation';
+            }
+        });
+
+        // Afficher un message
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.style.display = 'block';
+            messageDiv.className = type;
+            messageDiv.textContent = text;
+
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Mettre à jour les infos utilisateur quand l'ID change
+        document.getElementById('userId').addEventListener('change', loadUserInfo);
+    </script>
+</body>
+</html>
